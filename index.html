@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asset Quality Checker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --accent: #7c6dff;
+      --accent2: #a855f7;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header span {
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    main {
+      width: 100%;
+      max-width: 860px;
+      padding: 48px 24px 80px;
+    }
+
+    /* Upload zone */
+    #upload-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .upload-zone {
+      width: 100%;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 64px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(124, 109, 255, 0.05);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--surface2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    .upload-zone h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .upload-zone p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .upload-zone .formats {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* Results */
+    #results-section {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .results-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .btn-clear {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-clear:hover {
+      background: var(--surface);
+      border-color: var(--accent);
+    }
+
+    /* Preview + Score row */
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .top-row { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* Preview card */
+    .preview-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: var(--surface2);
+    }
+
+    .file-name {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* Score card */
+    .score-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .score-ring {
+      position: relative;
+      width: 130px;
+      height: 130px;
+    }
+
+    .score-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .score-ring .track {
+      fill: none;
+      stroke: var(--surface2);
+      stroke-width: 10;
+    }
+
+    .score-ring .fill {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  stroke 0.4s;
+    }
+
+    .score-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-number {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .score-verdict {
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .score-verdict.pass { color: var(--green); }
+    .score-verdict.warn { color: var(--yellow); }
+    .score-verdict.fail { color: var(--red); }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Criteria list */
+    .criteria-card {}
+
+    .criteria-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .criterion {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+
+    .criterion.pass { border-color: rgba(34, 197, 94, 0.2); }
+    .criterion.warn { border-color: rgba(234, 179, 8, 0.2); }
+    .criterion.fail { border-color: rgba(239, 68, 68, 0.2); }
+
+    .criterion-icon {
+      font-size: 16px;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .criterion-body {
+      flex: 1;
+    }
+
+    .criterion-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .criterion-detail {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .criterion-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+
+    .pass .criterion-badge { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+    .warn .criterion-badge { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
+    .fail .criterion-badge { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+
+    /* Resolution verdict banner */
+    .resolution-banner {
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid;
+    }
+
+    .resolution-banner.high {
+      background: rgba(34, 197, 94, 0.08);
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .resolution-banner.medium {
+      background: rgba(234, 179, 8, 0.08);
+      border-color: rgba(234, 179, 8, 0.25);
+    }
+
+    .resolution-banner.low {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .banner-icon { font-size: 28px; }
+
+    .banner-text h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .banner-text p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .high .banner-text h3 { color: var(--green); }
+    .medium .banner-text h3 { color: var(--yellow); }
+    .low .banner-text h3 { color: var(--red); }
+
+    /* Footer note */
+    .source-note {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .source-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">&#9670;</div>
+  <h1>Asset Quality</h1>
+  <span>&nbsp;Checker</span>
+</header>
+
+<main>
+  <!-- Upload Section -->
+  <div id="upload-section">
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="image/*" />
+      <div class="upload-icon">&#128247;</div>
+      <h2>Drop an image or click to upload</h2>
+      <p>Analyze resolution, dimensions, aspect ratio, and web quality score</p>
+      <div class="formats">JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; WebP &nbsp;·&nbsp; GIF &nbsp;·&nbsp; SVG &nbsp;·&nbsp; AVIF</div>
+    </div>
+    <p class="source-note">
+      Resolution standards based on Google Web Fundamentals, W3C recommendations,<br />
+      and industry guidelines from Cloudinary, Smashing Magazine &amp; MDN Web Docs.
+    </p>
+  </div>
+
+  <!-- Results Section -->
+  <div id="results-section">
+    <div class="results-header">
+      <h2>Analysis Results</h2>
+      <button class="btn-clear" id="clear-btn">&#8592; Analyze Another</button>
+    </div>
+
+    <!-- Resolution banner -->
+    <div class="resolution-banner" id="res-banner">
+      <div class="banner-icon" id="banner-icon"></div>
+      <div class="banner-text">
+        <h3 id="banner-title"></h3>
+        <p id="banner-desc"></p>
+      </div>
+    </div>
+
+    <!-- Preview + Score -->
+    <div class="top-row">
+      <div class="card preview-card">
+        <div class="card-label">Preview</div>
+        <img id="preview-img" src="" alt="Preview" />
+        <div class="file-name" id="file-name-label"></div>
+      </div>
+
+      <div class="card score-card">
+        <div class="card-label">Overall Score</div>
+        <div class="score-ring">
+          <svg viewBox="0 0 130 130" width="130" height="130">
+            <circle class="track" cx="65" cy="65" r="55" />
+            <circle class="fill" id="score-arc" cx="65" cy="65" r="55"
+              stroke-dasharray="345.4"
+              stroke-dashoffset="345.4" />
+          </svg>
+          <div class="score-center">
+            <div class="score-number" id="score-number">0</div>
+            <div class="score-label">/ 100</div>
+          </div>
+        </div>
+        <div class="score-verdict" id="score-verdict"></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Criteria breakdown -->
+    <div class="card">
+      <div class="card-label">Best Practice Breakdown</div>
+      <div class="criteria-list" id="criteria-list"></div>
+    </div>
+
+    <p class="source-note">
+      &#9432;&nbsp; High-resolution thresholds: &ge;1920px width for hero images (Google Web Fundamentals), &ge;2x pixel density for HiDPI/Retina displays (Apple HIG, MDN). Optimal file sizes per WebP/AVIF guidance from web.dev.
+    </p>
+  </div>
+</main>
+
+<script>
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const uploadSection = document.getElementById('upload-section');
+  const resultsSection = document.getElementById('results-section');
+  const clearBtn = document.getElementById('clear-btn');
+
+  // Drag and drop
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) analyze(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) analyze(fileInput.files[0]);
+  });
+
+  clearBtn.addEventListener('click', reset);
+
+  function reset() {
+    fileInput.value = '';
+    resultsSection.style.display = 'none';
+    uploadSection.style.display = 'flex';
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+  function getAspectRatio(w, h) {
+    const d = gcd(w, h);
+    const rw = w / d, rh = h / d;
+    // Normalize to common ratios
+    const ratio = w / h;
+    const known = [
+      { r: 16/9, label: '16:9' }, { r: 4/3, label: '4:3' },
+      { r: 1/1, label: '1:1' }, { r: 3/2, label: '3:2' },
+      { r: 21/9, label: '21:9' }, { r: 9/16, label: '9:16' },
+      { r: 2/1, label: '2:1' }, { r: 4/5, label: '4:5' },
+      { r: 5/4, label: '5:4' }, { r: 3/4, label: '3:4' },
+    ];
+    const match = known.find(k => Math.abs(k.r - ratio) < 0.015);
+    if (match) return match.label;
+    // Reduce to simplified fraction (cap at reasonable numbers)
+    if (rw <= 30 && rh <= 30) return `${rw}:${rh}`;
+    return `${ratio.toFixed(2)}:1`;
+  }
+
+  function analyze(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      renderResults({ file, url, w, h });
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  function renderResults({ file, url, w, h }) {
+    const size = file.size;
+    const sizeMB = size / (1024 * 1024);
+    const ratio = getAspectRatio(w, h);
+    const mp = (w * h / 1_000_000).toFixed(2);
+    const isLandscape = w >= h;
+    const longer = Math.max(w, h);
+    const shorter = Math.min(w, h);
+
+    // ── Resolution tier (based on Google Web Fundamentals + Cloudinary guidelines)
+    // For HiDPI/Retina: assets should be 2x the CSS pixel size displayed.
+    // Hero images: 1920px+ wide recommended (Google Web Fundamentals).
+    // Content images: 800–1200px for standard web columns.
+    // Thumbnails: <400px.
+    let resTier; // 'high' | 'medium' | 'low'
+    if (longer >= 1920 && shorter >= 1080) resTier = 'high';
+    else if (longer >= 1280 && shorter >= 720) resTier = 'medium';
+    else resTier = 'low';
+
+    // ── Criteria scoring (each criterion has a weight)
+    const criteria = [];
+
+    // 1. Minimum pixel dimension for web use
+    const minDim = Math.min(w, h);
+    let dimScore, dimStatus;
+    if (minDim >= 1080) { dimScore = 25; dimStatus = 'pass'; }
+    else if (minDim >= 720) { dimScore = 15; dimStatus = 'warn'; }
+    else { dimScore = 0; dimStatus = 'fail'; }
+    criteria.push({
+      title: 'Pixel Dimensions',
+      detail: `${w} × ${h} px — Minimum recommended: 1080px on shortest side for full HiDPI coverage (Apple HIG, Google Web Fundamentals).`,
+      status: dimStatus,
+      badge: dimStatus === 'pass' ? 'Excellent' : dimStatus === 'warn' ? 'Acceptable' : 'Too Small',
+      score: dimScore,
+      max: 25,
+    });
+
+    // 2. Long-edge resolution (hero/banner suitability)
+    let heroScore, heroStatus;
+    if (longer >= 1920) { heroScore = 20; heroStatus = 'pass'; }
+    else if (longer >= 1280) { heroScore = 12; heroStatus = 'warn'; }
+    else { heroScore = 0; heroStatus = 'fail'; }
+    criteria.push({
+      title: 'Hero / Banner Suitability',
+      detail: `Longest edge: ${longer}px — Google Web Fundamentals recommends 1920px+ for full-width hero images; 1280px+ for content banners.`,
+      status: heroStatus,
+      badge: heroStatus === 'pass' ? 'Ready' : heroStatus === 'warn' ? 'Limited' : 'Not Suitable',
+      score: heroScore,
+      max: 20,
+    });
+
+    // 3. Megapixel count
+    const mpNum = parseFloat(mp);
+    let mpScore, mpStatus;
+    if (mpNum >= 2) { mpScore = 15; mpStatus = 'pass'; }
+    else if (mpNum >= 0.8) { mpScore = 8; mpStatus = 'warn'; }
+    else { mpScore = 0; mpStatus = 'fail'; }
+    criteria.push({
+      title: 'Megapixel Count',
+      detail: `${mp} MP — 2 MP+ (e.g. 1920×1080) ensures sharpness on standard displays; 8 MP+ for large print/4K screens.`,
+      status: mpStatus,
+      badge: mpNum >= 8 ? 'Exceptional' : mpStatus === 'pass' ? 'Good' : mpStatus === 'warn' ? 'Fair' : 'Low',
+      score: mpScore,
+      max: 15,
+    });
+
+    // 4. File size — web-optimised range
+    // web.dev / Cloudinary: JPG/WebP hero images ideally <500 KB; content images <200 KB.
+    // Raster source files for editing are fine larger; this checks web-delivery fitness.
+    let sizeScore, sizeStatus, sizeBadge;
+    if (sizeMB < 0.1) {
+      // Very small — likely already compressed, but might be low quality
+      sizeScore = 10; sizeStatus = 'warn'; sizeBadge = 'Very Small';
+    } else if (sizeMB <= 0.5) {
+      sizeScore = 20; sizeStatus = 'pass'; sizeBadge = 'Optimal';
+    } else if (sizeMB <= 2) {
+      sizeScore = 14; sizeStatus = 'warn'; sizeBadge = 'Acceptable';
+    } else if (sizeMB <= 5) {
+      sizeScore = 6; sizeStatus = 'warn'; sizeBadge = 'Heavy';
+    } else {
+      sizeScore = 0; sizeStatus = 'fail'; sizeBadge = 'Too Large';
+    }
+    criteria.push({
+      title: 'File Size (Web Delivery)',
+      detail: `${formatBytes(size)} — web.dev & Cloudinary recommend <500 KB for optimised hero images, <200 KB for content images delivered over the web.`,
+      status: sizeStatus,
+      badge: sizeBadge,
+      score: sizeScore,
+      max: 20,
+    });
+
+    // 5. Aspect ratio — common web ratios score better
+    const commonRatios = ['16:9','4:3','1:1','3:2','21:9','2:1','4:5','9:16'];
+    const isCommon = commonRatios.includes(ratio);
+    let arScore = isCommon ? 20 : 10;
+    let arStatus = isCommon ? 'pass' : 'warn';
+    criteria.push({
+      title: 'Aspect Ratio',
+      detail: `${ratio} — Standard web ratios (16:9, 4:3, 1:1, 3:2) are natively supported by CSS aspect-ratio, image CDNs, and most CMS crop tools without distortion.`,
+      status: arStatus,
+      badge: isCommon ? 'Standard' : 'Non-standard',
+      score: arScore,
+      max: 20,
+    });
+
+    const totalScore = criteria.reduce((a, c) => a + c.score, 0);
+
+    // ── Resolution banner
+    const banners = {
+      high: {
+        icon: '&#9989;',
+        title: 'High Resolution — Web Ready',
+        desc: `At ${w}×${h}px, this image meets or exceeds the 1920×1080px baseline recommended by Google Web Fundamentals for full-width web assets and 2× HiDPI displays.`,
+      },
+      medium: {
+        icon: '&#9888;&#65039;',
+        title: 'Medium Resolution — Limited Web Use',
+        desc: `At ${w}×${h}px, this image is suitable for content images and thumbnails but may appear soft on large displays or Retina/HiDPI screens without upscaling.`,
+      },
+      low: {
+        icon: '&#10060;',
+        title: 'Low Resolution — Not Recommended for Web',
+        desc: `At ${w}×${h}px, this image is below the 1280×720px threshold for web use and will appear pixelated or blurry at standard content widths on modern displays.`,
+      },
+    };
+    const b = banners[resTier];
+    const banner = document.getElementById('res-banner');
+    banner.className = `resolution-banner ${resTier}`;
+    document.getElementById('banner-icon').innerHTML = b.icon;
+    document.getElementById('banner-title').textContent = b.title;
+    document.getElementById('banner-desc').textContent = b.desc;
+
+    // ── Preview
+    document.getElementById('preview-img').src = URL.createObjectURL(file);
+    document.getElementById('file-name-label').textContent = file.name;
+
+    // ── Score ring
+    const arc = document.getElementById('score-arc');
+    const circumference = 345.4;
+    const offset = circumference - (totalScore / 100) * circumference;
+    arc.style.strokeDashoffset = offset;
+    const scoreColor = totalScore >= 75 ? '#22c55e' : totalScore >= 45 ? '#eab308' : '#ef4444';
+    arc.style.stroke = scoreColor;
+
+    const numEl = document.getElementById('score-number');
+    numEl.textContent = totalScore;
+    numEl.style.color = scoreColor;
+
+    const verdictEl = document.getElementById('score-verdict');
+    if (totalScore >= 75) {
+      verdictEl.textContent = 'Excellent for Web';
+      verdictEl.className = 'score-verdict pass';
+    } else if (totalScore >= 45) {
+      verdictEl.textContent = 'Needs Optimisation';
+      verdictEl.className = 'score-verdict warn';
+    } else {
+      verdictEl.textContent = 'Poor Web Quality';
+      verdictEl.className = 'score-verdict fail';
+    }
+
+    // ── Stats grid
+    const ppi = 'N/A (no EXIF)';
+    const stats = [
+      { label: 'Width', value: `${w} px`, sub: `${(w / 96).toFixed(1)} in @ 96 PPI` },
+      { label: 'Height', value: `${h} px`, sub: `${(h / 96).toFixed(1)} in @ 96 PPI` },
+      { label: 'Aspect Ratio', value: ratio, sub: isLandscape ? 'Landscape' : w === h ? 'Square' : 'Portrait' },
+      { label: 'Megapixels', value: `${mp} MP`, sub: `${(w * h).toLocaleString()} total pixels` },
+      { label: 'File Size', value: formatBytes(size), sub: file.type.replace('image/', '').toUpperCase() },
+      { label: 'Resolution Tier', value: resTier.charAt(0).toUpperCase() + resTier.slice(1), sub: longer >= 1920 ? '1080p+ class' : longer >= 1280 ? '720p class' : 'Sub-720p' },
+    ];
+
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-label">${s.label}</div>
+        <div class="stat-value">${s.value}</div>
+        <div class="stat-sub">${s.sub}</div>
+      </div>
+    `).join('');
+
+    // ── Criteria list
+    const icons = { pass: '&#9989;', warn: '&#9888;&#65039;', fail: '&#10060;' };
+    const list = document.getElementById('criteria-list');
+    list.innerHTML = criteria.map(c => `
+      <div class="criterion ${c.status}">
+        <div class="criterion-icon">${icons[c.status]}</div>
+        <div class="criterion-body">
+          <div class="criterion-title">${c.title} <span style="font-weight:400;color:var(--muted);font-size:12px;">(${c.score}/${c.max} pts)</span></div>
+          <div class="criterion-detail">${c.detail}</div>
+        </div>
+        <div class="criterion-badge">${c.badge}</div>
+      </div>
+    `).join('');
+
+    // ── Show results
+    uploadSection.style.display = 'none';
+    resultsSection.style.display = 'flex';
+  }
+</script>
+</body>
+</html>
