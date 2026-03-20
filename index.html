@@ -145,7 +145,9 @@ main, .theme-toggle {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 80px;
     }
 
     .upload-label {
@@ -230,6 +232,19 @@ main, .theme-toggle {
       color: var(--muted);
     }
 
+    /* Screen transitions */
+    #upload-section,
+    #results-section {
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+
+    #upload-section.fade-out,
+    #results-section.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     /* Results */
     #results-section {
       display: none;
@@ -240,7 +255,7 @@ main, .theme-toggle {
     .results-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -321,7 +336,7 @@ main, .theme-toggle {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 0;
     }
 
@@ -559,22 +574,138 @@ main, .theme-toggle {
     .medium .banner-text h3 { color: var(--yellow); }
     .low .banner-text h3 { color: var(--red); }
 
+    /* Upload group */
+    .upload-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      width: 100%;
+    }
+
     /* Footer note */
     .source-note {
       font-size: 11px;
       color: var(--muted);
       text-align: center;
       line-height: 1.6;
-      margin-top: 8px;
+      margin-top: 0;
     }
 
     .source-note a {
       color: var(--accent);
       text-decoration: none;
     }
+
+    /* ── Loading overlay ── */
+    #loading-section {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: transparent;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    #loading-section.visible {
+      opacity: 1;
+    }
+
+    .loading-logo-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-logo-wrap svg {
+      width: 140px;
+      height: auto;
+      animation: logoPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0px rgba(0, 255, 255, 0));
+      }
+      50% {
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 24px rgba(0, 220, 255, 0.55));
+      }
+    }
+
+    .loading-ring {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color: #00ffff;
+      border-right-color: rgba(56, 47, 182, 0.4);
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+      animation: spinRing 2s linear infinite;
+    }
+
+    .loading-ring-2 {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-bottom-color: rgba(0, 255, 255, 0.2);
+      border-left-color: rgba(56, 47, 182, 0.25);
+      border-top-color: transparent;
+      border-right-color: transparent;
+      animation: spinRing 2s linear infinite reverse;
+    }
+
+    @keyframes spinRing {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+
+<!-- Loading Overlay -->
+<div id="loading-section">
+  <div class="loading-logo-wrap">
+    <div class="loading-ring-2"></div>
+    <div class="loading-ring"></div>
+    <svg width="1822" height="1303" viewBox="0 0 1822 1303" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#filter0_loading)">
+        <mask id="mask0_loading" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="35" y="235" width="1365" height="1003">
+          <path d="M506.426 459.43C515.724 479.886 536.121 493.02 558.591 493.02H1264.94C1287.97 493.02 1308.77 506.813 1317.73 528.035L1394.6 710.148C1410.55 747.923 1382.82 789.734 1341.81 789.734H1115.74C1074.71 789.734 1046.98 831.582 1062.96 869.362L1185.21 1158.3C1201.19 1196.09 1173.46 1237.93 1132.44 1237.93H870.092C847.073 1237.93 826.288 1224.16 817.319 1202.96L555.998 585.29C547.029 564.09 526.244 550.315 503.225 550.315H183.528C161.057 550.315 140.661 537.182 131.363 516.726L40.2024 316.173C22.9574 278.234 50.6929 235.16 92.3673 235.16H367.588C390.058 235.16 410.455 248.294 419.753 268.75L506.426 459.43Z" fill="#2A1934"/>
+        </mask>
+        <g mask="url(#mask0_loading)">
+          <path d="M-367.706 94.0738C-385.572 52.0805 -354.756 5.48047 -309.12 5.48047H1133.28C1158.81 5.48047 1181.87 20.7306 1191.87 44.2227L1820.3 1521.32C1838.17 1563.31 1807.35 1609.91 1761.71 1609.91H319.314C293.784 1609.91 270.723 1594.66 260.728 1571.17L-367.706 94.0738Z" fill="black" fill-opacity="0.15"/>
+        </g>
+        <mask id="mask1_loading" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="74" y="65" width="1365" height="1003">
+          <path d="M546.246 289.27C555.545 309.726 575.941 322.859 598.411 322.859H1304.76C1327.79 322.859 1348.59 336.653 1357.55 357.875L1434.42 539.988C1450.37 577.763 1422.64 619.574 1381.63 619.574H1155.56C1114.53 619.574 1086.8 661.421 1102.78 699.202L1225.03 988.145C1241.01 1025.93 1213.28 1067.77 1172.26 1067.77H909.912C886.893 1067.77 866.109 1054 857.14 1032.8L595.818 415.13C586.849 393.93 566.065 380.155 543.046 380.155H223.348C200.878 380.155 180.481 367.022 171.183 346.566L80.0227 146.012C62.7778 108.073 90.5133 65 132.188 65H407.409C429.879 65 450.275 78.1335 459.573 98.5897L546.246 289.27Z" fill="#2A1934"/>
+        </mask>
+        <g mask="url(#mask1_loading)">
+          <path d="M-269.3 -164.176H1173.1C1198.43 -164.176 1221.31 -149.046 1231.23 -125.738L1859.66 1351.36C1877.39 1393.02 1846.81 1439.25 1801.53 1439.25H359.135C333.805 1439.25 310.925 1424.12 301.009 1400.81L-327.426 -76.2783C-345.152 -117.942 -314.577 -164.176 -269.3 -164.176Z" fill="url(#paint0_linear_loading)" stroke="black"/>
+        </g>
+      </g>
+      <defs>
+        <filter id="filter0_loading" x="33" y="63" width="1408" height="1176.93" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur_loading"/>
+        </filter>
+        <linearGradient id="paint0_linear_loading" x1="1372.7" y1="347.386" x2="766.299" y2="961.028" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00FFFF"/>
+          <stop offset="1" stop-color="#382FB6"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
 
 <main>
   <!-- Upload Section -->
@@ -608,7 +739,7 @@ main, .theme-toggle {
         </defs>
       </svg>
     </div>
-    <h1 class="app-headline">Taste Test</h1>
+    <div class="upload-group">
     <div class="upload-zone" id="drop-zone">
       <input type="file" id="file-input" accept="image/*" />
       <div class="upload-icon">
@@ -625,12 +756,12 @@ main, .theme-toggle {
       Resolution standards based on Google Web Fundamentals, W3C recommendations,<br />
       and industry guidelines from Cloudinary, Smashing Magazine &amp; MDN Web Docs.
     </p>
+    </div>
   </div>
 
   <!-- Results Section -->
   <div id="results-section">
     <div class="results-header">
-      <h2>Results</h2>
       <button class="btn-clear" id="clear-btn" title="Analyze Another">
         <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25 7L7 25M25 25L7 7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
@@ -667,7 +798,7 @@ main, .theme-toggle {
 
     <!-- Resolution banner -->
     <div class="resolution-banner" id="res-banner" style="display:none">
-      <div class="banner-icon" id="banner-icon"></div>
+
       <div class="banner-text">
         <h3 id="banner-title"></h3>
         <p id="banner-desc"></p>
@@ -691,7 +822,21 @@ const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
   const uploadSection = document.getElementById('upload-section');
   const resultsSection = document.getElementById('results-section');
+  const loadingSection = document.getElementById('loading-section');
   const clearBtn = document.getElementById('clear-btn');
+
+  function showLoading() {
+    loadingSection.style.display = 'flex';
+    requestAnimationFrame(() => loadingSection.classList.add('visible'));
+  }
+
+  function hideLoading(then) {
+    loadingSection.classList.remove('visible');
+    setTimeout(() => {
+      loadingSection.style.display = 'none';
+      if (then) then();
+    }, 400);
+  }
 
   // Drag and drop
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -711,8 +856,15 @@ const dropZone = document.getElementById('drop-zone');
 
   function reset() {
     fileInput.value = '';
-    resultsSection.style.display = 'none';
-    uploadSection.style.display = 'flex';
+    resultsSection.classList.add('fade-out');
+    setTimeout(() => {
+      resultsSection.style.display = 'none';
+      resultsSection.classList.remove('fade-out');
+      uploadSection.style.display = 'flex';
+      requestAnimationFrame(() => {
+        uploadSection.classList.remove('fade-out');
+      });
+    }, 400);
   }
 
   function formatBytes(bytes) {
@@ -743,13 +895,24 @@ const dropZone = document.getElementById('drop-zone');
   }
 
   function analyze(file) {
+    // Fade upload out, show loading
+    uploadSection.classList.add('fade-out');
+    setTimeout(() => {
+      uploadSection.style.display = 'none';
+      uploadSection.classList.remove('fade-out');
+      showLoading();
+    }, 400);
+
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       const w = img.naturalWidth;
       const h = img.naturalHeight;
-      renderResults({ file, url, w, h });
-      URL.revokeObjectURL(url);
+      // Display the loading screen for 2 seconds before showing results
+      setTimeout(() => {
+        renderResults({ file, url, w, h });
+        URL.revokeObjectURL(url);
+      }, 2000);
     };
     img.src = url;
   }
@@ -883,7 +1046,6 @@ const dropZone = document.getElementById('drop-zone');
     const banner = document.getElementById('res-banner');
     banner.className = `resolution-banner ${resTier}`;
     banner.style.display = '';
-    document.getElementById('banner-icon').innerHTML = b.icon;
     document.getElementById('banner-title').textContent = b.title;
     document.getElementById('banner-desc').textContent = b.desc;
 
@@ -956,9 +1118,12 @@ const dropZone = document.getElementById('drop-zone');
       </div>
     `).join('');
 
-    // ── Show results
-    uploadSection.style.display = 'none';
-    resultsSection.style.display = 'flex';
+    // ── Hide loading → fade in results
+    hideLoading(() => {
+      resultsSection.style.display = 'flex';
+      resultsSection.classList.add('fade-out');
+      requestAnimationFrame(() => resultsSection.classList.remove('fade-out'));
+    });
   }
 </script>
 </body>
